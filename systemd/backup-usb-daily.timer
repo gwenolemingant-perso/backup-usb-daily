@@ -1,0 +1,9 @@
+[Unit]
+Description=Backup USB Daily Timer
+
+[Timer]
+OnCalendar=*-*-* 18:30
+Persistent=true
+
+[Install]
+WantedBy=timers.target

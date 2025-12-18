@@ -1,0 +1,7 @@
+[Unit]
+Description=Backup USB Daily
+After=network-online.target
+
+[Service]
+Type=oneshot
+ExecStart=/usr/local/bin/backup_usb_daily.sh

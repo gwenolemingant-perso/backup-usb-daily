@@ -1,0 +1,13 @@
+SOURCE_DIR="/srv"
+BACKUP_SUBDIR="backup"
+MOUNT_POINT="/mnt/backup_usb_daily"
+DEVICE_UUID="UUID=xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"
+
+TELEGRAM_BOT_TOKEN="BOT:TOKEN"
+TELEGRAM_CHAT_ID="123456789"
+
+MAX_MONTHS=5
+LOW_SPACE_PERCENT=90
+MIN_DISK_GB=10
+
+TEST_MODE=false

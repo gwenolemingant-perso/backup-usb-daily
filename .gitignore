@@ -1,0 +1,17 @@
+# Logs
+*.log
+
+# Fichiers temporaires
+/tmp/
+*.tmp
+
+# Secrets
+*.conf
+!config/*.example
+
+# Éditeurs
+.vscode/
+.idea/
+
+# OS
+.DS_Store
