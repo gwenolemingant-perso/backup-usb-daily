@@ -103,10 +103,26 @@ log "$RSYNC_CMD"
 eval "$RSYNC_CMD" || BACKUP_STATUS="ERROR"
 
 ########################################
-# ROTATION BACKUP (1 MOIS)
+# ROTATION BACKUP MENSUELLE (5 mois max)
 ########################################
 cd "$BACKUP_ROOT" || exit
-ls -1d ????-?? 2>/dev/null | grep -v "$YEAR_MONTH" | xargs -r rm -rf
+
+# Récupère les mois existants triés
+MONTH_DIRS=$(ls -1d ????-?? 2>/dev/null | sort)
+
+# Compte le nombre de mois
+COUNT=$(echo "$MONTH_DIRS" | wc -l)
+
+# Supprime les plus anciens si > 5 mois
+if [ "$COUNT" -gt 5 ]; then
+    REMOVE_COUNT=$((COUNT - 5))
+    # On sélectionne les plus anciens
+    TO_REMOVE=$(echo "$MONTH_DIRS" | head -n "$REMOVE_COUNT")
+    for DIR in $TO_REMOVE; do
+        log "🗑️ Suppression ancienne sauvegarde : $DIR"
+        rm -rf "$DIR"
+    done
+fi
 
 ########################################
 # ARCHIVE MENSUELLE (AVEC TEST INTÉGRITÉ)
