@@ -11,3 +11,10 @@ LOW_SPACE_PERCENT=90
 MIN_DISK_GB=10
 
 TEST_MODE=false
+
+# Dossiers à exclure (chemins relatifs à SOURCE_DIR)
+EXCLUDES=(
+  "lost+found"
+  "tmp"
+  "cache"
+)

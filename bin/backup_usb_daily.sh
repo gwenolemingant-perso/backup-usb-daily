@@ -14,6 +14,7 @@ TELEGRAM_BOT_TOKEN=""
 TELEGRAM_CHAT_ID=""
 LOW_SPACE_PERCENT=90
 TEST_MODE=false
+EXCLUDES=()
 
 [ -f "$CONFIG_FILE" ] && . "$CONFIG_FILE"
 
@@ -70,7 +71,7 @@ log "===== BACKUP DÉMARRÉ ====="
 # ESPACE DISQUE
 ########################################
 USED=$(df -P "$MOUNT_POINT" | awk 'NR==2{gsub("%","",$5);print $5}')
-ROOT_USED=$(df -P / | awk 'NR==2{gsub("%","",$5);print $5}')
+ROOT_USED=$(df -P "$SOURCE_DIR" | awk 'NR==2{gsub("%","",$5);print $5}')
 
 [ "$USED" -ge "$LOW_SPACE_PERCENT" ] && \
 send_telegram "⚠️ [$HOSTNAME] Disque backup presque plein: ${USED}%"
@@ -96,8 +97,14 @@ fi
 
 mkdir -p "$BACKUP_DAY_DIR"
 
+# Gestion exclusions
+RSYNC_EXCLUDES=""
+for EX in "${EXCLUDES[@]}"; do
+  RSYNC_EXCLUDES="$RSYNC_EXCLUDES --exclude=$EX"
+done
+
 RSYNC_CMD="rsync -a --no-perms --no-owner --no-group --delete \
-$LINK_DEST \"$SOURCE_DIR/\" \"$BACKUP_DAY_DIR\" >> \"$LOG_FILE\" 2>&1"
+$LINK_DEST $RSYNC_EXCLUDES \"$SOURCE_DIR/\" \"$BACKUP_DAY_DIR\" >> \"$LOG_FILE\" 2>&1"
 
 log "$RSYNC_CMD"
 eval "$RSYNC_CMD" || BACKUP_STATUS="ERROR"
@@ -125,49 +132,6 @@ if [ "$COUNT" -gt 5 ]; then
 fi
 
 ########################################
-# ARCHIVE MENSUELLE (AVEC TEST INTÉGRITÉ)
-########################################
-ARCHIVE_DIR="$BACKUP_ROOT/monthly_archive"
-mkdir -p "$ARCHIVE_DIR"
-
-MONTH_ARCHIVE="$ARCHIVE_DIR/$YEAR_MONTH-backup.tar.gz"
-TMP_ARCHIVE="$MONTH_ARCHIVE.tmp"
-
-# Suppression des anciennes archives
-find "$ARCHIVE_DIR" -type f -not -name "$(basename "$MONTH_ARCHIVE")" -exec rm -f {} \;
-
-if [ ! -f "$MONTH_ARCHIVE" ]; then
-    log "Création archive mensuelle temporaire : $TMP_ARCHIVE"
-
-    tar -czf "$TMP_ARCHIVE" -C "$BACKUP_ROOT" "$YEAR_MONTH" >> "$LOG_FILE" 2>&1
-    TAR_RC=$?
-
-    if [ $TAR_RC -ne 0 ]; then
-        log "❌ Erreur création archive"
-        rm -f "$TMP_ARCHIVE"
-        BACKUP_STATUS="ERROR"
-        send_telegram "🚨 [$HOSTNAME] Échec création archive mensuelle $YEAR_MONTH"
-    else
-        log "Test intégrité archive…"
-        tar -tzf "$TMP_ARCHIVE" >/dev/null 2>&1
-        TEST_RC=$?
-
-        if [ $TEST_RC -eq 0 ]; then
-            mv "$TMP_ARCHIVE" "$MONTH_ARCHIVE"
-            log "✅ Archive mensuelle validée"
-            send_telegram "📦 [$HOSTNAME] Archive mensuelle $YEAR_MONTH créée et vérifiée"
-        else
-            log "❌ Archive corrompue"
-            rm -f "$TMP_ARCHIVE"
-            BACKUP_STATUS="ERROR"
-            send_telegram "🚨 [$HOSTNAME] Archive mensuelle $YEAR_MONTH CORROMPUE"
-        fi
-    fi
-else
-    log "Archive mensuelle déjà existante"
-fi
-
-########################################
 # DMESG DISQUES
 ########################################
 SMART_MSG=""
@@ -188,11 +152,11 @@ check_disk_errors "$MP_DEV"
 EMOJI=$([ "$BACKUP_STATUS" = "OK" ] && echo "✅" || echo "🚨")
 MESSAGE=$(printf "%b" \
 "$EMOJI [$HOSTNAME] Backup $BACKUP_STATUS
-Date: $TODAY
-Source: $SOURCE_DIR
-Cible: $BACKUP_ROOT
-Usage backup: ${USED}%
-Usage système: ${ROOT_USED}%
+Date : $TODAY
+Source : $SOURCE_DIR
+Cible : $BACKUP_ROOT
+Usage backup : ${USED}%
+Usage $SOURCE_DIR : ${ROOT_USED}%
 $SMART_MSG")
 
 send_telegram "$MESSAGE"
