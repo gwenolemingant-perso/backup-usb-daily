@@ -14,6 +14,8 @@ TELEGRAM_BOT_TOKEN=""
 TELEGRAM_CHAT_ID=""
 LOW_SPACE_PERCENT=90
 TEST_MODE=false
+USER_OWNER=""
+GROUPS_OWNER=""
 EXCLUDES=()
 
 [ -f "$CONFIG_FILE" ] && . "$CONFIG_FILE"
@@ -103,7 +105,7 @@ for EX in "${EXCLUDES[@]}"; do
   RSYNC_EXCLUDES="$RSYNC_EXCLUDES --exclude=$EX"
 done
 
-RSYNC_CMD="rsync -a --no-perms --no-owner --no-group --delete \
+RSYNC_CMD="rsync -a --no-perms --no-owner --no-group --delete --chown=$USER_OWNER:$GROUPS_OWNER \
 $LINK_DEST $RSYNC_EXCLUDES \"$SOURCE_DIR/\" \"$BACKUP_DAY_DIR\" >> \"$LOG_FILE\" 2>&1"
 
 log "$RSYNC_CMD"
