@@ -1,0 +1,10 @@
+SRV_IP="xxx.xxx.x.xx"
+MOUNT_POINT_SOURCE="/mnt/backup"
+MOUNT_POINT_DESTINATION="mnt/Backup_monthly"
+SRV_USER="xxxx"
+
+BASE_SOURCE="$MOUNT_POINT_SOURCE/backup"
+BASE_DESTINATION=$MOUNT_POINT_DESTINATION/xxxx
+
+TELEGRAM_BOT_TOKEN="xxxxxxxxxxxxxxxxx"
+TELEGRAM_CHAT_ID="xxxxxx"
